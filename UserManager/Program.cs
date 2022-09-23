@@ -52,8 +52,8 @@ namespace UserManager
                 @" | |  | / __|/ _ \ '__| | |\/| |/ _` | '_ \ / _` |/ _` |/ _ \ '__|    " + "\n" +
                 @" | |__| \__ \  __/ |    | |  | | (_| | | | | (_| | (_| |  __/ |       " + "\n" +
                 @"  \____/|___/\___|_|    |_|  |_|\__,_|_| |_|\__,_|\__, |\___|_|       " + "\n" +
-                @"                                                   __/ |              " + "\n" +
-                @" By Luke Barkess                                  |___/               " + "\n\n\n");
+                @" By                                                __/ |  Messy Code  " + "\n" +
+                @" Luke Barkess                                     |___/   Edition     " + "\n\n\n");
 
             Console.ResetColor();
         }
@@ -63,7 +63,7 @@ namespace UserManager
         /// </summary>
         static void Menu()
         {
-            Console.Write("What would you like to do:\n(C) Create new user\n(L) Login as user\n(U) List users\n(Q) Quit\n");
+            Console.Write("What would you like to do:\n(C) Create new user\n(L) Login as user\n(U) List users\n(D) Delete user\n(Q) Quit\n");
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine("--------------");
             Console.ResetColor();
@@ -81,6 +81,9 @@ namespace UserManager
                     break;
                 case "U":
                     ListUsers();
+                    break;
+                case "D":
+                    DeleteUser();
                     break;
                 case "Q":
                     Environment.Exit(0);
@@ -152,11 +155,114 @@ namespace UserManager
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("User created successfully\n");
+            Console.WriteLine(username + " created successfully\n");
             Console.ResetColor();
 
             string previousData = ReadData();
             WriteData(previousData + username + ":" + sha256Encrypt(passwordBuilders[0].ToString()) + "\n");
+
+            Menu();
+        }
+
+        /// <summary>
+        /// Deletes a user by username with verification
+        /// </summary>
+        static void DeleteUser()
+        {
+            string userToDelete = "";
+            int usernameAttempts = -1;
+
+            while (userToDelete == "" || !ReadData().Contains(userToDelete + ":"))
+            {
+                usernameAttempts++;
+
+                if (usernameAttempts > 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error: username does not exist\n");
+                    Console.ResetColor();
+                }
+
+                Console.Write("Enter the username of the user: ");
+                userToDelete = Console.ReadLine();
+            }
+
+            while (true)
+            {
+                Console.Write("Enter your password to verify the deletion of user " + userToDelete + ": ");
+
+                StringBuilder passwordBuilder = new StringBuilder();
+                ConsoleKeyInfo keyInfo;
+
+                do
+                {
+                    keyInfo = Console.ReadKey(true);
+
+                    if (!char.IsControl(keyInfo.KeyChar))
+                    {
+                        passwordBuilder.Append(keyInfo.KeyChar);
+                        Console.Write("*");
+                    }
+
+                    else if (keyInfo.Key == ConsoleKey.Backspace && passwordBuilder.Length != 0)
+                    {
+                        passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
+                        Console.Write("\b \b");
+                    }
+
+                } while (keyInfo.Key != ConsoleKey.Enter);
+
+                Console.WriteLine();
+
+                List<string> fileDataLines = ReadData().Split(Char.Parse("\n")).ToList();
+                string passwordHash = "";
+
+                foreach (string line in fileDataLines)
+                {
+                    if (line.Contains(userToDelete + ":"))
+                    {
+                        int indexOfData = fileDataLines.IndexOf(line);
+                        string[] splitData = fileDataLines[indexOfData].Split(Char.Parse(":"));
+                        passwordHash = splitData[1];
+                    }
+                }
+
+                if (sha256Encrypt(passwordBuilder.ToString()) == passwordHash)
+                {
+                    List<string> dataLines = ReadData().Split(Char.Parse("\n")).ToList();
+
+                    foreach (string line in dataLines.ToArray())
+                    {
+                        if (line.Contains(userToDelete))
+                        {
+                            Console.WriteLine();
+                            dataLines.Remove(line);
+                        }
+                    }
+
+                    string dataToWrite = "";
+
+                    foreach (string dataLine in dataLines)
+                    {
+                        Console.WriteLine(dataLines.Count);
+                        dataToWrite += dataLine + "\n";
+                    }
+
+                    WriteData(dataToWrite);
+
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(userToDelete + " was successfully deleted\n");
+                    Console.ResetColor();
+                    break;
+                }
+
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Password incorrect\n");
+                    Console.ResetColor();
+                }
+            }
 
             Menu();
         }
@@ -184,7 +290,7 @@ namespace UserManager
                 username = Console.ReadLine();
             }
 
-            List<string> fileDataLines = ReadData().Split(new string[] {"\n"}, StringSplitOptions.None).ToList();
+            List<string> fileDataLines = ReadData().Split(Char.Parse("\n")).ToList();
             string passwordHash = "";
 
             foreach (string line in fileDataLines)
