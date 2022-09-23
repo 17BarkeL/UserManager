@@ -36,7 +36,7 @@ namespace UserManager
             string username = Console.ReadLine();
 
             Console.Write("Enter your password: ");
-            StringBuilder passwordBuilder = new StringBuilder;
+            StringBuilder passwordBuilder = new StringBuilder();
             ConsoleKeyInfo keyInfo;
 
             do
@@ -49,7 +49,7 @@ namespace UserManager
                     Console.Write("*");
                 }
 
-                else if (keyInfo.Key == ConsoleKey.Backspace && password.Length != 0)
+                else if (keyInfo.Key == ConsoleKey.Backspace && passwordBuilder.Length != 0)
                 {
                     passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
                     Console.Write("\b \b");
