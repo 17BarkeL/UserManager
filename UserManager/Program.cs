@@ -11,17 +11,32 @@ namespace UserManager
     {
         static void Main(string[] args)
         {
-            CreateUser();
-            // Menu();
+            WelcomeMessage();
+            Menu();
+
+            Console.ReadLine();
         }
 
-        static void CreateUser()
+        static void Menu()
+        {
+            Console.WriteLine("What would you like to do:\n(C) Create new user,\n(L) Login as user");
+            string choice = Console.ReadLine().ToUpper();
+
+            switch (choice)
+            {
+                case "C":
+                    Console.WriteLine(CreateUser());
+                    break;
+            }
+        }
+
+        static string CreateUser()
         {
             Console.Write("What's your username: ");
             string username = Console.ReadLine();
 
             Console.Write("Enter your password: ");
-            SecureString password = new SecureString();
+            StringBuilder passwordBuilder = new StringBuilder;
             ConsoleKeyInfo keyInfo;
 
             do
@@ -30,23 +45,36 @@ namespace UserManager
 
                 if (!char.IsControl(keyInfo.KeyChar))
                 {
-                    password.AppendChar(keyInfo.KeyChar);
+                    passwordBuilder.Append(keyInfo.KeyChar);
                     Console.Write("*");
                 }
 
                 else if (keyInfo.Key == ConsoleKey.Backspace && password.Length != 0)
                 {
-                    password.RemoveAt(password.Length - 1);
+                    passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
                     Console.Write("\b \b");
                 }
 
             } while (keyInfo.Key != ConsoleKey.Enter);
+
+            return passwordBuilder.ToString();
         }
-        
-        static void Menu()
+
+        static void WelcomeMessage()
         {
-            Console.WriteLine("What would you like to do:\n(C) Create new user,\n(L) Login as user");
-            string choice = Console.ReadLine();
+            Console.ForegroundColor = ConsoleColor.Red;
+
+            Console.WriteLine(
+                "  _    _                 __  __                                       \n" +
+                " | |  | |               |  \\/  |                                     \n" +
+                " | |  | |___  ___ _ __  | \\  / | __ _ _ __   __ _  __ _  ___ _ __    \n" +
+                " | |  | / __|/ _ \\ '__| | |\\/| |/ _` | '_ \\ / _` |/ _` |/ _ \\ '__|\n" +
+                " | |__| \\__ \\  __/ |    | |  | | (_| | | | | (_| | (_| |  __/ |     \n" +
+                "  \\____/|___/\\___|_|    |_|  |_|\\__,_|_| |_|\\__,_|\\__, |\\___|_| \n" +
+                "                                                   __/ |              \n" +
+                " By Luke Barkess                                  |___/               \n\n\n");
+
+            Console.ResetColor();
         }
     }
 }
