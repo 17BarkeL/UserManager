@@ -12,14 +12,15 @@ namespace UserManager
     class Program
     {
         static SHA256 sha256Encrypter;
-        const string dataPath = @"W:\008. Computing\Student work\2022-2023\Y12\Luke Barkess\UserManager\Data";
+        static string dataPath = Directory.GetCurrentDirectory() + @"\Data";
+
+        // I know i'm not using multiple files its bad
 
         static void Main(string[] args)
         {
             Initialise();
             WelcomeMessage();
-            //Menu();
-            LoginUser();
+            Menu();
 
             Console.ReadLine();
         }
@@ -62,7 +63,7 @@ namespace UserManager
         /// </summary>
         static void Menu()
         {
-            Console.Write("What would you like to do:\n(C) Create new user,\n(L) Login as user\n");
+            Console.Write("What would you like to do:\n(C) Create new user\n(L) Login as user\n(U) List users\n(Q) Quit\n");
             Console.ForegroundColor = ConsoleColor.DarkCyan;
             Console.WriteLine("--------------");
             Console.ResetColor();
@@ -76,6 +77,13 @@ namespace UserManager
                     CreateUser();
                     break;
                 case "L":
+                    LoginUser();
+                    break;
+                case "U":
+                    ListUsers();
+                    break;
+                case "Q":
+                    Environment.Exit(0);
                     break;
             }
         }
@@ -144,47 +152,121 @@ namespace UserManager
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("User created successfully");
+            Console.WriteLine("User created successfully\n");
             Console.ResetColor();
 
             string previousData = ReadData();
             WriteData(previousData + username + ":" + sha256Encrypt(passwordBuilders[0].ToString()) + "\n");
+
+            Menu();
         }
 
+        /// <summary>
+        /// Attempts to login to an existing user using inputted username and password
+        /// </summary>
         static void LoginUser()
         {
-            do
-            {
-                Console.Write("Enter your username: ");
-                string username = Console.ReadLine();
-            } while (!ReadData().Contains(username + ":"));
-            
-            //Console.WriteLine("Error: There is no user with that name");
+            string username = "";
+            int usernameAttempts = -1;
 
-            Console.Write("Enter your password: ");
+            while (username == "" || !ReadData().Contains(username + ":"))
+            {
+                usernameAttempts++;
+
+                if (usernameAttempts > 0)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error: There is no user with that name\n");
+                    Console.ResetColor();
+                }
+
+                Console.Write("Enter your username: ");
+                username = Console.ReadLine();
+            }
+
+            List<string> fileDataLines = ReadData().Split(new string[] {"\n"}, StringSplitOptions.None).ToList();
+            string passwordHash = "";
+
+            foreach (string line in fileDataLines)
+            {
+                if (line.Contains(username + ":"))
+                {
+                    int indexOfData = fileDataLines.IndexOf(line);
+                    string[] splitData = fileDataLines[indexOfData].Split(Char.Parse(":"));
+                    passwordHash = splitData[1];
+                }
+            }
 
             StringBuilder passwordBuilder = new StringBuilder();
             ConsoleKeyInfo keyInfo;
 
-            do
+            string password = "";
+
+            Console.Write("Enter your password: ");
+
+            while (true)
             {
-                keyInfo = Console.ReadKey(true);
-
-                if (!char.IsControl(keyInfo.KeyChar))
+                do
                 {
-                    passwordBuilder.Append(keyInfo.KeyChar);
-                    Console.Write("*");
+                    keyInfo = Console.ReadKey(true);
+
+                    if (!char.IsControl(keyInfo.KeyChar))
+                    {
+                        passwordBuilder.Append(keyInfo.KeyChar);
+                        Console.Write("*");
+                    }
+
+                    else if (keyInfo.Key == ConsoleKey.Backspace && passwordBuilder.Length != 0)
+                    {
+                        passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
+                        Console.Write("\b \b");
+                    }
+
+                } while (keyInfo.Key != ConsoleKey.Enter);
+
+                Console.WriteLine();
+                password = passwordBuilder.ToString();
+
+                if (sha256Encrypt(password) == passwordHash)
+                {
+                    break;
                 }
 
-                else if (keyInfo.Key == ConsoleKey.Backspace && passwordBuilder.Length != 0)
+                else
                 {
-                    passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
-                    Console.Write("\b \b");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error: Password incorrect\n");
+                    Console.ResetColor();
+
+                    passwordBuilder.Clear();
+
+                    Console.Write("Enter your password: ");
                 }
+            }
 
-            } while (keyInfo.Key != ConsoleKey.Enter);
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Successfully logged in as " + username + "\n");
+            Console.ResetColor();
 
-            string password = passwordBuilder.ToString();
+            Menu();
+        }
+
+        /// <summary>
+        /// Displays all users usernames
+        /// </summary>
+        static void ListUsers()
+        {
+            string[] dataLines = ReadData().Split(Char.Parse("\n"));
+
+            Console.WriteLine("Users:");
+
+            foreach (string line in dataLines)
+            {
+                string[] splitLine = line.Split(Char.Parse(":"));
+                Console.WriteLine(splitLine[0]);
+            }
+
+            Menu();
         }
         
         /// <summary>
