@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security;
+using System.Security.Cryptography;
 using System.IO;
 
 namespace UserManager
 {
     class Program
     {
+        static SHA256 sha256Encrypter;
         const string dataPath = @"W:\008. Computing\Student work\2022-2023\Y12\Luke Barkess\UserManager\Data";
 
         static void Main(string[] args)
@@ -21,14 +23,22 @@ namespace UserManager
             Console.ReadLine();
         }
 
+        /// <summary>
+        /// Initialising the program
+        /// </summary>
         static void Initialise()
         {
             if (!File.Exists(dataPath))
             {
                 File.Create(dataPath).Close();
             }
+
+            sha256Encrypter = SHA256.Create();
         }
 
+        /// <summary>
+        /// Welcomes the user at the start of the program
+        /// </summary>
         static void WelcomeMessage()
         {
             Console.ForegroundColor = ConsoleColor.DarkCyan;
@@ -46,6 +56,9 @@ namespace UserManager
             Console.ResetColor();
         }
 
+        /// <summary>
+        /// Shows the user the menu and handles the input
+        /// </summary>
         static void Menu()
         {
             Console.Write("What would you like to do:\n(C) Create new user,\n(L) Login as user\n");
@@ -66,7 +79,10 @@ namespace UserManager
             }
         }
 
-        static string CreateUser()
+        /// <summary>
+        /// Creates a new user with inputted username and password and writes their data
+        /// </summary>
+        static void CreateUser()
         {
             Console.Write("What's your username: ");
             string username = Console.ReadLine();
@@ -130,17 +146,53 @@ namespace UserManager
             Console.WriteLine("User created successfully");
             Console.ResetColor();
 
-            return passwordBuilders[0].ToString();
+            string previousData = ReadData();
+            WriteData(previousData + username + ":" + sha256Encrypt(passwordBuilders[0].ToString()) + "\n");
         }
-
+        
+        /// <summary>
+        /// Writes the inputted data to the data file
+        /// </summary>
+        /// <param name="toWrite">The string to write to the data file</param>
         static void WriteData(string toWrite)
         {
             File.WriteAllText(dataPath, toWrite);
         }
 
+        /// <summary>
+        /// Gets the data files contents as a string
+        /// </summary>
+        /// <returns>The file contents as a string</returns>
         static string ReadData()
         {
             return File.ReadAllText(dataPath);
+        }
+
+        /// <summary>
+        /// Clears all of the data file
+        /// </summary>
+        static void ClearData()
+        {
+            WriteData("");
+        }
+
+        /// <summary>
+        /// Encrypts an inputted string into the SHA256 format hash
+        /// </summary>
+        /// <param name="toEncrypt">The string to encrypt</param>
+        /// <returns>The encrypted string in a hexadecimal format</returns>
+        static string sha256Encrypt(string toEncrypt)
+        {
+            byte[] hashBytes = sha256Encrypter.ComputeHash(Encoding.UTF8.GetBytes(toEncrypt));
+
+            StringBuilder hashBuilder = new StringBuilder();
+
+            foreach (byte hashByte in hashBytes)
+            {
+                hashBuilder.Append(hashByte.ToString("X2")); // X2 means to 2 digit hexadecimal
+            }
+
+            return hashBuilder.ToString().ToLower();
         }
     }
 }
