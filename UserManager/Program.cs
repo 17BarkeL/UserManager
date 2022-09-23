@@ -18,7 +18,8 @@ namespace UserManager
         {
             Initialise();
             WelcomeMessage();
-            Menu();
+            //Menu();
+            LoginUser();
 
             Console.ReadLine();
         }
@@ -148,6 +149,42 @@ namespace UserManager
 
             string previousData = ReadData();
             WriteData(previousData + username + ":" + sha256Encrypt(passwordBuilders[0].ToString()) + "\n");
+        }
+
+        static void LoginUser()
+        {
+            do
+            {
+                Console.Write("Enter your username: ");
+                string username = Console.ReadLine();
+            } while (!ReadData().Contains(username + ":"));
+            
+            //Console.WriteLine("Error: There is no user with that name");
+
+            Console.Write("Enter your password: ");
+
+            StringBuilder passwordBuilder = new StringBuilder();
+            ConsoleKeyInfo keyInfo;
+
+            do
+            {
+                keyInfo = Console.ReadKey(true);
+
+                if (!char.IsControl(keyInfo.KeyChar))
+                {
+                    passwordBuilder.Append(keyInfo.KeyChar);
+                    Console.Write("*");
+                }
+
+                else if (keyInfo.Key == ConsoleKey.Backspace && passwordBuilder.Length != 0)
+                {
+                    passwordBuilder.Remove(passwordBuilder.Length - 1, 1);
+                    Console.Write("\b \b");
+                }
+
+            } while (keyInfo.Key != ConsoleKey.Enter);
+
+            string password = passwordBuilder.ToString();
         }
         
         /// <summary>
