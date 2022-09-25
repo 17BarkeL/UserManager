@@ -43,8 +43,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataFile.cs" />
+    <Compile Include="Encryptor.cs" />
+    <Compile Include="Globals.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UserMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
